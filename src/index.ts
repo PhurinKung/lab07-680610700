@@ -11,6 +11,7 @@ import {
   zStudentPostBody,
   zStudentPutBody,
 } from "@libs/studentValidator.js";
+import type { OK } from 'zod/v3';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -29,22 +30,52 @@ app.get("/", (req: Request, res: Response) => {
 app.get("/students", (req: Request, res: Response) => {
   try {
     const program = req.query.program;
+    const studentId = req.query.studentId;
 
-    if (program) {
+    const formatStudent = (student: Student) => ({
+      studentId: student.studentId,
+      firstName: student.firstName,
+      lastName: student.lastName,
+      program: student.program,
+    });
+
+    if(program && studentId) {
+      let filtered_students = students.filter(
+        (student) => student.program === program && student.studentId===studentId
+      );
+      return res.json({
+        ok: true,
+        students: filtered_students.map(formatStudent),
+      });
+    }
+    else if (program) {
       let filtered_students = students.filter(
         (student) => student.program === program
       );
       return res.json({
-        success: true,
-        data: filtered_students,
+        ok: true,
+        students: filtered_students.map(formatStudent),
       });
-    } else {
+    } 
+    else if(studentId) {
+      let filtered_students = students.filter(
+        (student) => student.studentId === studentId
+      );
+      return res.json({
+        ok: true,
+        students: filtered_students.map(formatStudent),
+      });
+    } 
+    else {
       return res.json({
         success: true,
         count: students.length,
-        data: students,
+        students: students,
       });
     }
+
+    
+
   } catch (err) {
     return res.json({
       success: false,
@@ -150,12 +181,39 @@ app.put("/students", (req: Request, res: Response) => {
 
 // DELETE /students, body = {studentId}
 app.delete("/students", (req: Request, res: Response) => {
-  res.json({
-    message: "Implement this!"
+  const student = req.body as Student;
+  //check validation  
+  const val = zStudentDeleteBody.safeParse(student);
+  if(!val.success){
+    return res.json({
+      ok: false,
+      message: val.error.issues[0]?.message
+    })
+  } 
+  const foundIndex = students.findIndex((s)=> s.studentId===student.studentId)
+  if(foundIndex===-1) // cannot find
+  {
+    return res.json({
+      success: false,
+      message: "Student ID does not exist"
+    })
+  }
+
+  students.splice(foundIndex,1);
+  return res.json({
+    ok: true,
+    message: `Student Id ${student.studentId} has been deleted`,
   })
 });
 
 // GET /api/me
+app.get('/api/me', (req:Request, res:Response) => {
+  return res.json({
+    ok: true,
+    fullName: "Phichamon  Kaewboot",
+    studentId: "680610700"
+  })
+})
 
 app.listen(port, async () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
