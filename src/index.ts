@@ -27,7 +27,7 @@ app.get("/", (req: Request, res: Response) => {
 
 // GET /students
 // get students (by program)
-app.get("/students", (req: Request, res: Response) => {
+app.get("/api/students", (req: Request, res: Response) => {
   try {
     const program = req.query.program;
     const studentId = req.query.studentId;
@@ -180,7 +180,7 @@ app.put("/students", (req: Request, res: Response) => {
 });
 
 // DELETE /students, body = {studentId}
-app.delete("/students", (req: Request, res: Response) => {
+app.delete("/api/students", (req: Request, res: Response) => {
   const student = req.body as Student;
   //check validation  
   const val = zStudentDeleteBody.safeParse(student);
@@ -194,7 +194,7 @@ app.delete("/students", (req: Request, res: Response) => {
   if(foundIndex===-1) // cannot find
   {
     return res.json({
-      success: false,
+      ok: false,
       message: "Student ID does not exist"
     })
   }
